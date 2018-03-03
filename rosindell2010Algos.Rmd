@@ -1,0 +1,66 @@
+---
+title: "Neutrally slapping abundances on trees"
+author: "A. J. Rominger"
+date: "3/3/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+These algorithms come from Appendix 1 of Rosindell *et al.* (2010) *Ecology Letters* 13: 716--727.
+
+## Point-mutation speciation in the metacommunity
+
+```{r, fig.width=3, fig.height=3, cache=TRUE}
+# function to simulate meta community abundance under 
+# point mutation model of speciation
+
+pointMutMeta <- function(theta, J) {
+    # initialize with every lineage being one individual
+    K <- J
+    V <- rep(1, J)
+    
+    # this will hold the abundances of the final species
+    W <- c()
+    
+    # loop until all lineages have coalesced
+    while(K > 0) {
+        # determines if we have speciation or coalescence
+        r <- runif(1)
+        
+        # the lineage to which either event happens
+        i <- sample(K, 1)
+        
+        # determine the event
+        if(r <= theta / (theta + K - 1)) { # speciation
+            W <- c(W, V[i])
+            V <- V[-i]
+        } else { # coalescence
+            j <- sample((1:K)[-i], 1)
+            V[i] <- V[i] + V[j]
+            V <- V[-j]
+        }
+        
+        # after either event, number of lineages is always 
+        # one less
+        K <- K - 1
+    }
+    
+    return(W)
+}
+
+# try it out
+x <- pointMutMeta(theta = 100, J = 10^4)
+
+par(mar = c(3, 3, 0, 0) + 0.5, mgp = c(1.5, 0.5, 0))
+plot(sort(x, TRUE), log = 'y', xlab = 'Species rank', ylab = 'Abundance')
+```
+
+
+## Protracted speciation in the metacommunity
+
+```{r, fig.width=3, fig.height=3, cache=TRUE}
+
+```
