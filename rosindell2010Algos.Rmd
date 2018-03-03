@@ -62,5 +62,57 @@ plot(sort(x, TRUE), log = 'y', xlab = 'Species rank', ylab = 'Abundance')
 ## Protracted speciation in the metacommunity
 
 ```{r, fig.width=3, fig.height=3, cache=TRUE}
+# function to simulate meta community abundance under 
+# protracted model of speciation
 
+protractMeta <- function(theta, J, tau) {
+    taup <- tau / (J) # in units of generations, which themselves are in units of births
+    V <- rep(1, J)
+    K <- J
+    W <- c()
+    
+    while(K > 0) {
+        # total number of units of coalescence time that have passed
+        t <- 0
+        
+        # determines how many generations until the next 
+        # coalescence event
+        r <- runif(1)
+        
+        t <- t - log(r) / (K * (K - 1))
+        
+        if(taup > t) {  # coalescence without speciation
+            ij <- sample(K, 2)
+            V[ij[1]] <- sum(V[ij])
+            V <- V[-ij[2]]
+            K <- K - 1
+        } else {  # point mut algo
+            # the lineage to which either event happens
+            i <- sample(K, 1)
+            
+            # determine the event
+            if(r <= theta / (theta + K - 1)) { # speciation
+                W <- c(W, V[i])
+                V <- V[-i]
+            } else { # coalescence
+                j <- sample((1:K)[-i], 1)
+                V[i] <- V[i] + V[j]
+                V <- V[-j]
+            }
+            
+            # after either event, number of lineages is always 
+            # one less
+            K <- K - 1
+        }
+        
+    }
+    
+    return(W)
+}
+
+# try it out
+x <- protractMeta(100, 10^4, 2)
+
+par(mar = c(3, 3, 0, 0) + 0.5, mgp = c(1.5, 0.5, 0))
+plot(sort(x, TRUE), log = 'y', xlab = 'Species rank', ylab = 'Abundance')
 ```
