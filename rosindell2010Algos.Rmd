@@ -126,14 +126,17 @@ plot(sort(x, TRUE), log = 'y', xlab = 'Species rank', ylab = 'Abundance')
 
 We need the tree topology and branch lengths as well.  While we could easily get the topology from the above algorithms (recording the parent of each time `V[i]` merges with `V[j]` until speciation) the branch lengths would require a little more math---something for Rampal and James, not I! Additionally, in *R* these algorithms are slow for large $J$, though implementing them in *C++* would obviously be efficient. More direcetly simulating a coalescent process and then "sprinkling" (by a Poisson process) speciation events on that coalescent would give us everything we wanted.
 
-The sojourn time in generations of $k$ lineages coalescing to $k - 1$ lineages is $\tau \sim exp\left\{\binom{k}{2}\right\}$. So we can simulate the coalescent this way
+The sojourn time in generations of $k$ lineages coalescing to $k - 1$ lineages is $\tau \sim exp\left\{\binom{k}{2}\right\}$. So we can simulate the coalescent sojourns this way
 
 ```{r}
 J <- 10^3 # number of individuals
 lambda <- 10 # point mutation speciation rate in generations
 
 coalSoj <- rexp(J - 1, choose(J:2, 2)) # vector of sojourn times
+```
 
+Now we need the speciation events. These are just Poisson along every edge of the coalescent tree with equal rate
+```{r}
 # speciation happens according to a Poisson process, so we need
 # to have a random number of speciation events, and place them
 # uniformly randomly across all branches of the coalescent tree
@@ -142,4 +145,10 @@ nSpeciate <- rpois(1, lambda * sum(coalSoj * J:2)) # number of events
 # ID of the sojourn times in which speciation occurs
 sSpeciate <- sample(paste(rep((J-1):1, J:2), 1:sum(2:J), sep = '-'), 
                     nSpeciate, replace = TRUE, prob = rep(coalSoj, J:2))
+```
+
+Multiple speciation events along the same edge are redundant, so we can remove them
+
+```{r}
+# never mind
 ```
